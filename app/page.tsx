@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import HostAndRef from "./hostandref"; 
 
 // ======================
 // TYPES
@@ -368,7 +369,7 @@ export default function SoccerTournamentPage() {
   }
 
   function requireAdmin(): boolean {
-    const code = prompt("Enter admin code:");
+    const code = prompt("Enter 6 digits admin code:");
     return code === ADMIN_CODE;
   }
 
@@ -440,23 +441,23 @@ export default function SoccerTournamentPage() {
             </div>
 
             {/* Main title */}
-            <h2 className="text-6xl md:text-8xl font-black tracking-tight mb-4">
+            <h3 className="text-6xl md:text-8xl font-black tracking-tight mb-4">
               <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(212,160,72,0.4)]">
                 2026
               </span>
-            </h2>
+            </h3>
 
-            <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-4 leading-none">
-              <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,160,72,0.5)]">
-                King of Charlotte Cup
-              </span>
-            </h1>
+<h1 className="font-black tracking-tight mb-4 leading-none">
+  <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,160,72,0.5)] text-[5.5rem] md:text-[6rem] lg:text-[8rem] xl:text-[10rem]">
+    King of Charlotte Cup
+  </span>
+</h1>
 
-            <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-4">
+            <h3 className="text-5xl md:text-7xl font-black tracking-tight mb-4">
               <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent">
                 Winner $1200.00
               </span>
-            </h2>
+            </h3>
 
             {/* Subtitle */}
             <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mt-6 leading-relaxed">
@@ -756,6 +757,11 @@ export default function SoccerTournamentPage() {
           ))}
         </div>
       </section>
+
+
+      {/* REFEREES & HOST SECTION - IMPORTED COMPONENT */}
+      <HostAndRef />
+
 
       {/* FOOTER QUOTE */}
       <footer className="border-t border-white/10 py-8 text-center">
