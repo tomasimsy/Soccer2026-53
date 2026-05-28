@@ -137,7 +137,7 @@ export default function HostAndRef() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <p className="font-bold text-white text-lg">Lee Richardson</p>
+                    <p className="font-bold text-white text-lg">Lee DaaMan</p>
                     <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Head Host</span>
                   </div>
                   <p className="text-sm text-gray-400 mt-1">
@@ -153,7 +153,7 @@ export default function HostAndRef() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <p className="font-bold text-white text-lg">Tom Bennett</p>
+                    <p className="font-bold text-white text-lg">Tom Ngo Khong</p>
                     <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Co-Host</span>
                   </div>
                   <p className="text-sm text-gray-400 mt-1">
