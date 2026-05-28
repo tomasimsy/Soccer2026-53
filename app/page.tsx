@@ -101,24 +101,6 @@ export default function SoccerTournamentPage() {
   // ======================
   useEffect(() => {
     initializeDatabase();
-
-    // Set up real-time subscription for matches
-    const subscription = supabase
-      .channel('matches-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'matches' }, 
-        () => {
-          // Reload data when any match changes
-          console.log("Match change detected, reloading...");
-          loadMatches();
-          calculateStandings();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   async function initializeDatabase() {
@@ -132,7 +114,7 @@ export default function SoccerTournamentPage() {
           await supabase.from("teams").insert([{
             team: teamName,
             played: 0, wins: 0, draws: 0, losses: 0,
-            gf: 0, ga: 0, gd: 0, points: 0
+            gf: 0, ga: 0, gd: 0, points: 0, form: []
           }]);
         }
       }
@@ -154,7 +136,7 @@ export default function SoccerTournamentPage() {
         }
       }
 
-      await Promise.all([loadMatches(), calculateStandings()]);
+      await loadAllData();
 
     } catch (err) {
       console.error("Error:", err);
@@ -163,131 +145,135 @@ export default function SoccerTournamentPage() {
     }
   }
 
-  async function loadMatches() {
+  async function loadAllData() {
     try {
-      const { data, error } = await supabase
+      // Load matches
+      const { data: matchesData } = await supabase
         .from("matches")
         .select("*")
         .order("week", { ascending: true });
 
-      if (error) {
-        console.error("Error loading matches:", error);
-        return;
-      }
-
-      if (!data) return;
-
-      console.log("Loaded matches:", data);
-
-      const grouped: { [key: number]: Game[] } = {};
-      data.forEach((match) => {
-        if (!grouped[match.week]) grouped[match.week] = [];
-        grouped[match.week].push({
-          id: match.id,
-          week: match.week,
-          home: match.home,
-          away: match.away,
-          home_score: match.home_score,
-          away_score: match.away_score,
-          played: match.played,
+      if (matchesData) {
+        // Group matches by week for schedule
+        const grouped: { [key: number]: Game[] } = {};
+        matchesData.forEach((match) => {
+          if (!grouped[match.week]) grouped[match.week] = [];
+          grouped[match.week].push({
+            id: match.id,
+            week: match.week,
+            home: match.home,
+            away: match.away,
+            home_score: match.home_score,
+            away_score: match.away_score,
+            played: match.played,
+          });
         });
-      });
 
-      const scheduleArray = Object.keys(grouped).map((week) => ({
-        week: parseInt(week),
-        games: grouped[parseInt(week)],
-      }));
+        const scheduleArray = Object.keys(grouped).map((week) => ({
+          week: parseInt(week),
+          games: grouped[parseInt(week)],
+        }));
 
-      setSchedule(scheduleArray);
+        setSchedule(scheduleArray);
+
+        // Calculate standings from matches
+        await calculateAndUpdateStandings(matchesData);
+      }
     } catch (err) {
-      console.error("Error in loadMatches:", err);
+      console.error("Error loading data:", err);
     }
   }
 
-  async function calculateStandings() {
-    try {
-      const { data: matches, error } = await supabase.from("matches").select("*");
-      
-      if (error) {
-        console.error("Error loading matches for standings:", error);
-        return;
-      }
-      
-      const playedMatches = matches?.filter(m => m.played === true) || [];
+  async function calculateAndUpdateStandings(matches: any[]) {
+    const playedMatches = matches?.filter(m => m.played === true) || [];
 
-      const stats: { [key: string]: any } = {};
-      allTeams.forEach((teamName) => {
-        stats[teamName] = {
-          team: teamName,
-          played: 0, wins: 0, draws: 0, losses: 0,
-          gf: 0, ga: 0, gd: 0, points: 0, form: [],
-        };
-      });
+    const stats: { [key: string]: any } = {};
+    allTeams.forEach((teamName) => {
+      stats[teamName] = {
+        team: teamName,
+        played: 0, wins: 0, draws: 0, losses: 0,
+        gf: 0, ga: 0, gd: 0, points: 0, form: [],
+      };
+    });
 
-      playedMatches.forEach((match) => {
-        const home = stats[match.home];
-        const away = stats[match.away];
-        if (!home || !away) return;
+    playedMatches.forEach((match) => {
+      const home = stats[match.home];
+      const away = stats[match.away];
+      if (!home || !away) return;
 
-        home.played++;
-        away.played++;
-        home.gf += match.home_score;
-        home.ga += match.away_score;
-        away.gf += match.away_score;
-        away.ga += match.home_score;
+      home.played++;
+      away.played++;
+      home.gf += match.home_score;
+      home.ga += match.away_score;
+      away.gf += match.away_score;
+      away.ga += match.home_score;
 
-        if (match.home_score > match.away_score) {
-          home.wins++; 
-          away.losses++; 
-          home.points += 3;
-          home.form.unshift('W'); 
-          away.form.unshift('L');
-        } else if (match.home_score < match.away_score) { 
-          away.wins++; 
-          home.losses++; 
-          away.points += 3;
-          home.form.unshift('L'); 
-          away.form.unshift('W'); 
-        } else { 
-          home.draws++; 
-          away.draws++; 
-          home.points += 1;
-          away.points += 1; 
-          home.form.unshift('D'); 
-          away.form.unshift('D'); 
-        }
-        
-        if (home.form.length > 5) home.form.pop();
-        if (away.form.length > 5) away.form.pop();
-      });
-
-      for (const team of Object.values(stats)) {
-        team.gd = team.gf - team.ga;
+      if (match.home_score > match.away_score) {
+        home.wins++;
+        away.losses++;
+        home.points += 3;
+        home.form.unshift('W');
+        away.form.unshift('L');
+      } else if (match.home_score < match.away_score) {
+        away.wins++;
+        home.losses++;
+        away.points += 3;
+        home.form.unshift('L');
+        away.form.unshift('W');
+      } else {
+        home.draws++;
+        away.draws++;
+        home.points += 1;
+        away.points += 1;
+        home.form.unshift('D');
+        away.form.unshift('D');
       }
 
-      const standingsArray = Object.values(stats).map(team => ({
-        id: team.team,
-        team: team.team,
-        played: team.played,
-        wins: team.wins,
-        draws: team.draws,
-        losses: team.losses,
-        gf: team.gf,
-        ga: team.ga,
-        gd: team.gd,
-        points: team.points,
-        form: team.form,
-      }));
+      if (home.form.length > 5) home.form.pop();
+      if (away.form.length > 5) away.form.pop();
+    });
 
-      const sorted = standingsArray.sort((a, b) => {
-        if (a.points !== b.points) return b.points - a.points;
-        if (a.gd !== b.gd) return b.gd - a.gd;
-        return b.gf - a.gf;
-      });
+    for (const team of Object.values(stats)) {
+      team.gd = team.gf - team.ga;
+    }
 
-      setStandings(sorted);
-    } catch (err) {
-      console.error("Error in calculateStandings:", err);
+    const standingsArray = Object.values(stats).map(team => ({
+      id: team.team,
+      team: team.team,
+      played: team.played,
+      wins: team.wins,
+      draws: team.draws,
+      losses: team.losses,
+      gf: team.gf,
+      ga: team.ga,
+      gd: team.gd,
+      points: team.points,
+      form: team.form,
+    }));
+
+    const sorted = standingsArray.sort((a, b) => {
+      if (a.points !== b.points) return b.points - a.points;
+      if (a.gd !== b.gd) return b.gd - a.gd;
+      return b.gf - a.gf;
+    });
+
+    setStandings(sorted);
+
+    // Update teams table
+    for (const team of sorted) {
+      await supabase
+        .from("teams")
+        .update({
+          played: team.played,
+          wins: team.wins,
+          draws: team.draws,
+          losses: team.losses,
+          gf: team.gf,
+          ga: team.ga,
+          gd: team.gd,
+          points: team.points,
+        })
+        .eq("team", team.team);
     }
   }
 
@@ -300,7 +286,7 @@ export default function SoccerTournamentPage() {
     setSaving(true);
 
     try {
-      const { error } = await supabase
+      await supabase
         .from("matches")
         .update({
           home_score: homeScore,
@@ -309,22 +295,13 @@ export default function SoccerTournamentPage() {
         })
         .eq("id", matchId);
 
-      if (error) throw error;
-
-      // Wait a moment for the database to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Reload both data sources
-      await Promise.all([
-        loadMatches(),
-        calculateStandings()
-      ]);
-      
+      await loadAllData();
       setEditingGame(null);
       setEditValues({});
-      
+      // alert("Score saved! Standings updated.");
+
     } catch (err) {
-      console.error("Error saving score:", err);
+      console.error("Error:", err);
       alert("Error saving score");
     } finally {
       setSaving(false);
@@ -340,7 +317,7 @@ export default function SoccerTournamentPage() {
     setSaving(true);
 
     try {
-      const { error } = await supabase
+      await supabase
         .from("matches")
         .update({
           home_score: homeScore,
@@ -349,22 +326,13 @@ export default function SoccerTournamentPage() {
         })
         .eq("id", matchId);
 
-      if (error) throw error;
-
-      // Wait a moment for the database to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Reload both data sources
-      await Promise.all([
-        loadMatches(),
-        calculateStandings()
-      ]);
-      
+      await loadAllData();
       setEditingGame(null);
       setEditValues({});
-      
+      // alert("Score updated! Standings recalculated.");
+
     } catch (err) {
-      console.error("Error updating score:", err);
+      console.error("Error:", err);
       alert("Error updating score");
     } finally {
       setSaving(false);
@@ -415,9 +383,7 @@ export default function SoccerTournamentPage() {
       alert("Wrong admin code");
       return;
     }
-
     setAdminOpen(false);
-
     if (pendingAction) {
       pendingAction();
       setPendingAction(null);
@@ -426,7 +392,7 @@ export default function SoccerTournamentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#07111f] to-[#0a1a2a] text-white pb-20">
-      {/* UNIQUE HERO SECTION - KING OF CHARLOTTE */}
+      {/* KING OF CHARLOTTE HERO SECTION */}
       <section className="relative overflow-hidden bg-[#07111f]">
         {/* Stadium background image */}
         <div className="absolute inset-0 bg-cover bg-center opacity-15" style={{
@@ -435,36 +401,25 @@ export default function SoccerTournamentPage() {
         }} />
 
         {/* Stadium spotlight */}
-        <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,160,72,0.18),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,160,72,0.18),transparent_60%)]" />
 
         {/* Soccer field lines */}
         <div className="absolute inset-0 opacity-[0.06]">
           <div className="absolute inset-y-0 left-1/2 w-[2px] bg-white" />
-          <div
-            className="absolute top-1/2 left-1/2 w-72 h-72 border border-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute top-1/2 left-1/2 w-72 h-72 border border-white rounded-full -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute inset-8 border border-white rounded-3xl" />
         </div>
 
         {/* Floating soccer balls */}
-        <div className="absolute top-20 left-10 text-5xl opacity-20 animate-bounce">
-          ⚽
-        </div>
-        <div className="absolute bottom-24 right-12 text-6xl opacity-10 animate-pulse">
-          ⚽
-        </div>
-        <div className="absolute top-1/3 right-1/4 text-4xl opacity-10 animate-spin [animation-duration:12s]">
-          ⚽
-        </div>
+        <div className="absolute top-20 left-10 text-5xl opacity-20 animate-bounce">⚽</div>
+        <div className="absolute bottom-24 right-12 text-6xl opacity-10 animate-pulse">⚽</div>
+        <div className="absolute top-1/3 right-1/4 text-4xl opacity-10 animate-spin [animation-duration:12s]">⚽</div>
 
         {/* Golden glow particles */}
         <div className="absolute inset-0 opacity-40">
-          <div
-            className="absolute top-20 left-10 w-32 h-32 bg-[#d4a048]/20 rounded-full blur-3xl animate-pulse" />
-          <div
-            className="absolute bottom-20 right-10 w-40 h-40 bg-[#d4a048]/10 rounded-full blur-3xl animate-pulse delay-1000" />
-          <div
-            className="absolute top-1/2 left-1/2 w-60 h-60 bg-[#d4a048]/5 rounded-full blur-3xl animate-pulse delay-500" />
+          <div className="absolute top-20 left-10 w-32 h-32 bg-[#d4a048]/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-40 h-40 bg-[#d4a048]/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 left-1/2 w-60 h-60 bg-[#d4a048]/5 rounded-full blur-3xl animate-pulse delay-500" />
         </div>
 
         {/* Stadium crowd fade */}
@@ -478,32 +433,27 @@ export default function SoccerTournamentPage() {
             {/* Trophy + Soccer Ball */}
             <div className="inline-block mb-8">
               <div className="relative flex items-center justify-center gap-4">
-                <span className="text-6xl md:text-7xl animate-bounce inline-block">
-                  🏆
-                </span>
-                <span className="text-5xl md:text-6xl opacity-90 animate-spin [animation-duration:10s]">
-                  ⚽
-                </span>
+                <span className="text-6xl md:text-7xl animate-bounce inline-block">🏆</span>
+                <span className="text-5xl md:text-6xl opacity-90 animate-spin [animation-duration:10s]">⚽</span>
                 <div className="absolute -top-2 right-10 w-3 h-3 bg-[#d4a048] rounded-full animate-ping" />
               </div>
             </div>
 
             {/* Main title */}
             <h2 className="text-6xl md:text-8xl font-black tracking-tight mb-4">
-              <span
-                className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(212,160,72,0.4)]">
+              <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(212,160,72,0.4)]">
                 2026
               </span>
             </h2>
+
             <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-4 leading-none">
-              <span
-                className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,160,72,0.5)]">
+              <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(212,160,72,0.5)]">
                 King of Charlotte Cup
               </span>
             </h1>
+
             <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-4">
-              <span
-                className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#d4a048] via-[#f5e6b8] to-[#d4a048] bg-clip-text text-transparent">
                 Winner $1200.00
               </span>
             </h2>
@@ -517,29 +467,17 @@ export default function SoccerTournamentPage() {
 
             {/* Tournament tags */}
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <div
-                className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
-                <span className="text-sm uppercase tracking-wider">
-                  ⚽ Double Round Robin
-                </span>
+              <div className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
+                <span className="text-sm uppercase tracking-wider">⚽ Double Round Robin</span>
               </div>
-              <div
-                className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
-                <span className="text-sm uppercase tracking-wider">
-                  🏟 Charlotte Arena
-                </span>
+              <div className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
+                <span className="text-sm uppercase tracking-wider">🏟 Charlotte Arena</span>
               </div>
-              <div
-                className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
-                <span className="text-sm uppercase tracking-wider">
-                  🏆 Crown the Champion
-                </span>
+              <div className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
+                <span className="text-sm uppercase tracking-wider">🏆 Crown the Champion</span>
               </div>
-              <div
-                className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
-                <span className="text-sm uppercase tracking-wider">
-                  🔥 Rivalries Begin
-                </span>
+              <div className="px-4 py-2 bg-white/5 rounded-full backdrop-blur-sm border border-[#d4a048]/30 shadow-lg shadow-[#d4a048]/10">
+                <span className="text-sm uppercase tracking-wider">🔥 Rivalries Begin</span>
               </div>
             </div>
 
@@ -572,7 +510,8 @@ export default function SoccerTournamentPage() {
               <div className="h-3 bg-white/10 rounded-full overflow-hidden border border-white/10">
                 <div
                   className="h-full bg-gradient-to-r from-[#d4a048] to-[#f5e6b8] rounded-full transition-all duration-700 shadow-[0_0_20px_rgba(212,160,72,0.7)]"
-                  style={{ width: `${(completedMatches / totalMatches) * 100}%` }} />
+                  style={{ width: `${(completedMatches / totalMatches) * 100}%` }}
+                />
               </div>
             </div>
 
@@ -586,7 +525,7 @@ export default function SoccerTournamentPage() {
         </div>
       </section>
 
-      {/* STANDINGS */}
+      {/* STANDINGS TABLE */}
       <section className="relative max-w-6xl mx-auto px-4 py-16 overflow-hidden">
         {/* Stadium glow background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,160,72,0.12),transparent_60%)]" />
@@ -636,6 +575,7 @@ export default function SoccerTournamentPage() {
                 <th className="p-4 text-center">GA</th>
                 <th className="p-4 text-center">GD</th>
                 <th className="p-4 text-center">PTS</th>
+                <th className="p-4 text-center">Form</th>
               </tr>
             </thead>
             <tbody>
@@ -667,6 +607,17 @@ export default function SoccerTournamentPage() {
                       {team.points}
                     </span>
                   </td>
+                  <td className="p-4 text-center">
+                    <div className="flex gap-1 justify-center">
+                      {team.form.map((result, i) => (
+                        <span key={i} className={`w-6 h-6 rounded-full text-xs flex items-center justify-center ${
+                          result === 'W' ? 'bg-green-600' : result === 'D' ? 'bg-yellow-600' : 'bg-red-600'
+                        }`}>
+                          {result}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -677,7 +628,7 @@ export default function SoccerTournamentPage() {
         </div>
       </section>
 
-      {/* SCHEDULE */}
+      {/* SCHEDULE SECTION */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -708,25 +659,21 @@ export default function SoccerTournamentPage() {
                         <div className="text-center text-2xl font-bold text-green-400 mb-2">
                           {game.home_score} - {game.away_score}
                         </div>
-                        <button 
-                          onClick={() => {
-                            if (!requireAdmin()) {
-                              alert("Wrong admin code");
-                              return;
-                            }
-                            startEdit(game.id!, game.home_score || 0, game.away_score || 0);
-                          }}
-                          className="w-full py-2 bg-[#d4a048]/20 rounded-lg text-sm font-semibold text-[#d4a048] hover:bg-[#d4a048]/30 transition"
-                        >
+                        <button onClick={() => {
+                          if (!requireAdmin()) {
+                            alert("Wrong admin code");
+                            return;
+                          }
+                          startEdit(game.id!, game.home_score || 0, game.away_score || 0);
+                        }}
+                          className="w-full py-2 bg-[#d4a048]/20 rounded-lg text-sm font-semibold text-[#d4a048] hover:bg-[#d4a048]/30 transition">
                           ✏️ Edit Score
                         </button>
                       </div>
                     ) : editingGame === game.id ? (
                       <div className="space-y-2">
                         <div className="flex gap-2">
-                          <input 
-                            type="number" 
-                            value={editValues[game.id!]?.home ?? game.home_score ?? 0}
+                          <input type="number" value={editValues[game.id!]?.home ?? game.home_score ?? 0}
                             onChange={(e) => setEditValues({
                               ...editValues,
                               [game.id!]: {
@@ -737,9 +684,7 @@ export default function SoccerTournamentPage() {
                             className="w-full p-2 rounded bg-black/30 border border-white/10 text-center focus:border-[#d4a048] outline-none"
                             placeholder="Home"
                           />
-                          <input 
-                            type="number" 
-                            value={editValues[game.id!]?.away ?? game.away_score ?? 0}
+                          <input type="number" value={editValues[game.id!]?.away ?? game.away_score ?? 0}
                             onChange={(e) => setEditValues({
                               ...editValues,
                               [game.id!]: {
@@ -752,21 +697,17 @@ export default function SoccerTournamentPage() {
                           />
                         </div>
                         <div className="flex gap-2">
-                          <button 
-                            onClick={() => updateScore(
-                              game.id!,
-                              editValues[game.id!]?.home ?? game.home_score ?? 0,
-                              editValues[game.id!]?.away ?? game.away_score ?? 0
-                            )}
+                          <button onClick={() => updateScore(
+                            game.id!,
+                            editValues[game.id!]?.home ?? game.home_score ?? 0,
+                            editValues[game.id!]?.away ?? game.away_score ?? 0
+                          )}
                             disabled={saving}
-                            className="flex-1 py-2 bg-green-600 rounded-lg text-sm font-semibold hover:bg-green-500 transition"
-                          >
+                            className="flex-1 py-2 bg-green-600 rounded-lg text-sm font-semibold hover:bg-green-500 transition">
                             {saving ? "Saving..." : "Update"}
                           </button>
-                          <button 
-                            onClick={cancelEdit}
-                            className="flex-1 py-2 bg-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-500 transition"
-                          >
+                          <button onClick={cancelEdit}
+                            className="flex-1 py-2 bg-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-500 transition">
                             Cancel
                           </button>
                         </div>
@@ -774,46 +715,36 @@ export default function SoccerTournamentPage() {
                     ) : (
                       <div className="space-y-2">
                         <div className="flex gap-2">
-                          <input 
-                            type="number" 
-                            id={`home_${game.id}`} 
-                            placeholder="Home"
-                            className="w-full p-2 rounded bg-black/30 border border-white/10 text-center focus:border-[#d4a048] outline-none" 
-                          />
-                          <input 
-                            type="number" 
-                            id={`away_${game.id}`} 
-                            placeholder="Away"
-                            className="w-full p-2 rounded bg-black/30 border border-white/10 text-center focus:border-[#d4a048] outline-none" 
-                          />
+                          <input type="number" id={`home_${game.id}`} placeholder="Home"
+                            className="w-full p-2 rounded bg-black/30 border border-white/10 text-center focus:border-[#d4a048] outline-none" />
+                          <input type="number" id={`away_${game.id}`} placeholder="Away"
+                            className="w-full p-2 rounded bg-black/30 border border-white/10 text-center focus:border-[#d4a048] outline-none" />
                         </div>
-                        <button 
-                          onClick={() => {
-                            const homeEl = document.getElementById(`home_${game.id}`) as HTMLInputElement;
-                            const awayEl = document.getElementById(`away_${game.id}`) as HTMLInputElement;
+                        <button onClick={() => {
+                          const homeEl = document.getElementById(`home_${game.id}`) as HTMLInputElement;
+                          const awayEl = document.getElementById(`away_${game.id}`) as HTMLInputElement;
 
-                            const homeVal = homeEl?.value;
-                            const awayVal = awayEl?.value;
+                          const homeVal = homeEl?.value;
+                          const awayVal = awayEl?.value;
 
-                            if (homeVal === "" || awayVal === "") {
-                              alert("Please enter both scores");
-                              return;
-                            }
+                          if (homeVal === "" || awayVal === "") {
+                            alert("Please enter both scores");
+                            return;
+                          }
 
-                            if (!requireAdmin()) {
-                              alert("Wrong admin code");
-                              return;
-                            }
+                          if (!requireAdmin()) {
+                            alert("Wrong admin code");
+                            return;
+                          }
 
-                            saveScore(
-                              game.id!,
-                              parseInt(homeVal),
-                              parseInt(awayVal)
-                            );
-                          }}
+                          saveScore(
+                            game.id!,
+                            parseInt(homeVal),
+                            parseInt(awayVal)
+                          );
+                        }}
                           disabled={saving}
-                          className="w-full py-2 bg-[#d4a048] rounded-lg text-sm font-semibold text-black hover:bg-[#e8b84a] transition"
-                        >
+                          className="w-full py-2 bg-[#d4a048] rounded-lg text-sm font-semibold text-black hover:bg-[#e8b84a] transition">
                           Record Result
                         </button>
                       </div>
