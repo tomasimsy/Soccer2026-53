@@ -130,39 +130,55 @@ export default function HostAndRef() {
             </div>
 
             {/* Hosts */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#d4a048]/10 to-transparent border-l-4 border-[#d4a048] hover:border-l-[6px] transition-all">
-                <div className="w-14 h-14 rounded-full bg-[#d4a048]/30 flex items-center justify-center group-hover:scale-105 transition">
-                  <span className="text-3xl">👑</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <p className="font-bold text-white text-lg">Lee DaaMan</p>
-                    <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Head Host</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Tournament director & ceremony coordinator. Handles team check-ins, schedule coordination, 
-                    and award presentations.
-                  </p>
-                </div>
-              </div>
+<div className="space-y-4">
+  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#d4a048]/10 to-transparent border-l-4 border-[#d4a048] hover:border-l-[6px] transition-all">
+    <div className="w-14 h-14 rounded-full bg-[#d4a048]/30 flex items-center justify-center group-hover:scale-105 transition">
+      <span className="text-3xl">👑</span>
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="font-bold text-white text-lg">Lee DaaMan</p>
+        <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Head Host</span>
+      </div>
+      <p className="text-sm text-gray-400 mt-1">
+        Tournament director & ceremony coordinator. Handles team check-ins, schedule coordination, 
+        and award presentations.
+      </p>
+    </div>
+  </div>
 
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#d4a048]/5 to-transparent border-l-4 border-[#d4a048]/50 hover:border-l-[6px] transition-all">
-                <div className="w-14 h-14 rounded-full bg-[#d4a048]/20 flex items-center justify-center group-hover:scale-105 transition">
-                  <span className="text-3xl">🎤</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <p className="font-bold text-white text-lg">Tom Ngo Khong</p>
-                    <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Co-Host</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Match announcer & crowd engagement specialist. Keeps the energy high throughout the tournament 
-                    with live commentary and fan interactions.
-                  </p>
-                </div>
-              </div>
-            </div>
+  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#d4a048]/8 to-transparent border-l-4 border-[#d4a048]/40 hover:border-l-[6px] transition-all">
+    <div className="w-14 h-14 rounded-full bg-[#d4a048]/25 flex items-center justify-center group-hover:scale-105 transition">
+      <span className="text-3xl">👩‍🎤</span>
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="font-bold text-white text-lg">Lena</p>
+        <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Assistant Host</span>
+      </div>
+      <p className="text-sm text-gray-400 mt-1">
+        Player liaison & hospitality coordinator. Assists with team communications, handles player inquiries, 
+        and ensures smooth backstage operations.
+      </p>
+    </div>
+  </div>
+
+  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#d4a048]/5 to-transparent border-l-4 border-[#d4a048]/50 hover:border-l-[6px] transition-all">
+    <div className="w-14 h-14 rounded-full bg-[#d4a048]/20 flex items-center justify-center group-hover:scale-105 transition">
+      <span className="text-3xl">🎤</span>
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="font-bold text-white text-lg">Tom Ngo Khong</p>
+        <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Co-Host</span>
+      </div>
+      <p className="text-sm text-gray-400 mt-1">
+        Match announcer & crowd engagement specialist. Keeps the energy high throughout the tournament 
+        with live commentary and fan interactions.
+      </p>
+    </div>
+  </div>
+</div>
 
             {/* Host Responsibilities */}
             <div className="mt-6">
