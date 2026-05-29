@@ -153,7 +153,7 @@ export default function HostAndRef() {
     </div>
     <div className="flex-1">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="font-bold text-white text-lg">Lena</p>
+        <p className="font-bold text-white text-lg">Lina Mango</p>
         <span className="text-xs bg-[#d4a048]/20 px-2 py-1 rounded-full text-[#d4a048] border border-[#d4a048]/30">Assistant Host</span>
       </div>
       <p className="text-sm text-gray-400 mt-1">
