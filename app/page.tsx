@@ -527,107 +527,179 @@ export default function SoccerTournamentPage() {
       </section>
 
       {/* STANDINGS TABLE */}
-      <section className="relative max-w-6xl mx-auto px-4 py-16 overflow-hidden">
-        {/* Stadium glow background */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,160,72,0.12),transparent_60%)]" />
+<section className="relative max-w-6xl mx-auto px-4 py-16 overflow-hidden">
+  {/* Stadium glow background */}
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,160,72,0.12),transparent_60%)]" />
 
-        {/* Subtle field lines */}
-        <div className="absolute inset-0 opacity-[0.05]">
-          <div className="absolute inset-y-0 left-1/2 w-[2px] bg-white" />
-          <div className="absolute top-1/2 left-1/2 w-[500px] h-[500px] border border-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-        </div>
+  {/* Subtle field lines */}
+  <div className="absolute inset-0 opacity-[0.05]">
+    <div className="absolute inset-y-0 left-1/2 w-[2px] bg-white" />
+    <div className="absolute top-1/2 left-1/2 w-[500px] h-[500px] border border-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+  </div>
 
-        {/* Floating soccer balls */}
-        <div className="absolute top-10 left-10 text-4xl opacity-10 animate-bounce">⚽</div>
-        <div className="absolute bottom-10 right-10 text-5xl opacity-10 animate-pulse">⚽</div>
+  {/* Floating soccer balls */}
+  <div className="absolute top-10 left-10 text-4xl opacity-10 animate-bounce">
+    ⚽
+  </div>
+  <div className="absolute bottom-10 right-10 text-5xl opacity-10 animate-pulse">
+    ⚽
+  </div>
 
-        {/* Header */}
-        <div className="relative flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-2">
-              <span>⚔️ Table of Power</span>
-              <span className="text-[#d4a048] animate-pulse">🏆</span>
-            </h2>
-            <p className="text-gray-400 mt-2">
-              Win = 3 pts • Draw = 1 pt • Loss = 0 pts • Goal difference decides glory
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 px-3 py-2 rounded-full border border-[#d4a048]/30 backdrop-blur-sm">
-            <div className="w-3 h-3 bg-[#d4a048] rounded-full animate-ping" />
-            <span>Realm Leader</span>
-          </div>
-        </div>
+  {/* Header */}
+  <div className="relative flex items-center justify-between mb-8">
+    <div>
+      <h2 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-2">
+        <span>⚔️ Table of Power</span>
+        <span className="text-[#d4a048] animate-pulse">🏆</span>
+      </h2>
 
-        {/* Table wrapper */}
-        <div className="relative overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_0_40px_rgba(212,160,72,0.08)]">
-          {/* Top glow bar */}
-          <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#d4a048] to-transparent" />
+      <p className="text-gray-400 mt-2 text-sm md:text-base">
+        Win = 3 pts • Draw = 1 pt • Loss = 0 pts • Goal difference decides glory
+      </p>
+    </div>
 
-          <table className="w-full min-w-[800px] text-sm">
-            <thead className="bg-white/10 text-gray-200 uppercase tracking-wider">
-              <tr>
-                <th className="p-4 text-left">#</th>
-                <th className="p-4 text-left">⚽ Clan</th>
-                <th className="p-4 text-center">P</th>
-                <th className="p-4 text-center text-green-300">W</th>
-                <th className="p-4 text-center text-yellow-300">D</th>
-                <th className="p-4 text-center text-red-300">L</th>
-                <th className="p-4 text-center">GF</th>
-                <th className="p-4 text-center">GA</th>
-                <th className="p-4 text-center">GD</th>
-                <th className="p-4 text-center">PTS</th>
-                <th className="p-4 text-center">Form</th>
-              </tr>
-            </thead>
-            <tbody>
-              {standings.map((team, idx) => (
-                <tr key={team.team} className={`border-t border-white/5 transition duration-200 hover:bg-white/10 ${
-                  idx === 0 ? "bg-[#d4a048]/10 shadow-inner shadow-[#d4a048]/10" : ""
-                }`}>
-                  <td className="p-4 font-bold text-white">
-                    {idx === 0 && <span className="text-[#d4a048] mr-1 animate-pulse">👑</span>}
-                    {idx + 1}
-                  </td>
-                  <td className="p-4 font-semibold text-white flex items-center gap-2">
-                    <span className="text-[#d4a048]">⚽</span>
-                    {team.team}
-                  </td>
-                  <td className="p-4 text-center text-gray-300">{team.played}</td>
-                  <td className="p-4 text-center text-green-400 font-semibold">{team.wins}</td>
-                  <td className="p-4 text-center text-yellow-300 font-semibold">{team.draws}</td>
-                  <td className="p-4 text-center text-red-400 font-semibold">{team.losses}</td>
-                  <td className="p-4 text-center text-gray-200">{team.gf}</td>
-                  <td className="p-4 text-center text-gray-200">{team.ga}</td>
-                  <td className="p-4 text-center font-bold text-white">{team.gd}</td>
-                  <td className="p-4 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-lg font-bold shadow-md ${
-                      idx === 0
-                        ? "bg-[#d4a048] text-black shadow-[#d4a048]/40"
-                        : "bg-white/10 text-green-300"
-                    }`}>
-                      {team.points}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="flex gap-1 justify-center">
-                      {team.form.map((result, i) => (
-                        <span key={i} className={`w-6 h-6 rounded-full text-xs flex items-center justify-center ${
-                          result === 'W' ? 'bg-green-600' : result === 'D' ? 'bg-yellow-600' : 'bg-red-600'
-                        }`}>
-                          {result}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="hidden md:flex items-center gap-2 text-sm text-gray-300 bg-white/5 px-3 py-2 rounded-full border border-[#d4a048]/30 backdrop-blur-sm">
+      <div className="w-3 h-3 bg-[#d4a048] rounded-full animate-ping" />
+      <span>Realm Leader</span>
+    </div>
+  </div>
 
-          {/* Bottom glow */}
-          <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#d4a048] to-transparent" />
-        </div>
-      </section>
+  {/* Table wrapper */}
+  <div className="relative overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_0_40px_rgba(212,160,72,0.08)]">
+    {/* Top glow */}
+    <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#d4a048] to-transparent" />
+
+    <table className="w-full min-w-[850px] border-separate border-spacing-0 text-xs md:text-sm">
+      <thead className="bg-white/10 text-gray-200 uppercase tracking-wider">
+        <tr>
+          {/* Sticky Rank */}
+          <th className="sticky left-0 z-30 bg-[#0f172a] p-2 md:p-4 text-left w-[45px] md:w-[70px] min-w-[45px] md:min-w-[70px] border-r border-white/10">
+            #
+          </th>
+
+          {/* Sticky Clan */}
+          <th className="sticky left-[45px] md:left-[70px] z-30 bg-[#0f172a] p-2 md:p-4 text-left w-[120px] md:w-[220px] min-w-[120px] md:min-w-[220px] border-r border-white/10 whitespace-nowrap">
+            ⚽ Clan
+          </th>
+          <th className="p-2 md:p-4 text-center">PTS</th>
+
+          <th className="p-2 md:p-4 text-center">P</th>
+          <th className="p-2 md:p-4 text-center text-green-300">W</th>
+          <th className="p-2 md:p-4 text-center text-yellow-300">D</th>
+          <th className="p-2 md:p-4 text-center text-red-300">L</th>
+          <th className="p-2 md:p-4 text-center">GF</th>
+          <th className="p-2 md:p-4 text-center">GA</th>
+          <th className="p-2 md:p-4 text-center">GD</th>
+          <th className="p-2 md:p-4 text-center">Form</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {standings.map((team, idx) => (
+          <tr
+            key={team.team}
+            className={`border-t border-white/5 transition duration-200 hover:bg-white/10 ${
+              idx === 0
+                ? "bg-[#d4a048]/10 shadow-inner shadow-[#d4a048]/10"
+                : ""
+            }`}
+          >
+            {/* Sticky Rank */}
+            <td
+              className={`sticky left-0 z-20 p-2 md:p-4 font-bold text-white w-[45px] md:w-[70px] min-w-[45px] md:min-w-[70px] border-r border-white/10 ${
+                idx === 0 ? "bg-[#2b2415]" : "bg-[#0f172a]"
+              }`}
+            >
+              <div className="flex items-center">
+                {idx === 0 && (
+                  <span className="text-[#d4a048] mr-1 animate-pulse">
+                    👑
+                  </span>
+                )}
+
+                {idx + 1}
+              </div>
+            </td>
+
+            {/* Sticky Team */}
+            <td
+              className={`sticky left-[45px] md:left-[70px] z-20 p-2 md:p-4 font-semibold text-white w-[120px] md:w-[220px] min-w-[120px] md:min-w-[220px] border-r border-white/10 whitespace-nowrap ${
+                idx === 0 ? "bg-[#2b2415]" : "bg-[#0f172a]"
+              }`}
+            >
+              <div className="flex items-center gap-1 md:gap-2">
+                <span className="text-[#d4a048]">⚽</span>
+                <span className="truncate">{team.team}</span>
+              </div>
+            </td>
+            <td className="p-2 md:p-4 text-center">
+              <span
+                className={`inline-block px-2 md:px-3 py-1 rounded-lg font-bold shadow-md text-xs md:text-sm ${
+                  idx === 0
+                    ? "bg-[#d4a048] text-black shadow-[#d4a048]/40"
+                    : "bg-white/10 text-green-300"
+                }`}
+              >
+                {team.points}
+              </span>
+            </td>
+            <td className="p-2 md:p-4 text-center text-gray-300">
+              {team.played}
+            </td>
+
+            <td className="p-2 md:p-4 text-center text-green-400 font-semibold">
+              {team.wins}
+            </td>
+
+            <td className="p-2 md:p-4 text-center text-yellow-300 font-semibold">
+              {team.draws}
+            </td>
+
+            <td className="p-2 md:p-4 text-center text-red-400 font-semibold">
+              {team.losses}
+            </td>
+
+            <td className="p-2 md:p-4 text-center text-gray-200">
+              {team.gf}
+            </td>
+
+            <td className="p-2 md:p-4 text-center text-gray-200">
+              {team.ga}
+            </td>
+
+            <td className="p-2 md:p-4 text-center font-bold text-white">
+              {team.gd}
+            </td>
+
+
+
+            <td className="p-2 md:p-4 text-center">
+              <div className="flex gap-1 justify-center">
+                {team.form.map((result, i) => (
+                  <span
+                    key={i}
+                    className={`w-5 h-5 md:w-6 md:h-6 rounded-full text-[10px] md:text-xs flex items-center justify-center ${
+                      result === "W"
+                        ? "bg-green-600"
+                        : result === "D"
+                        ? "bg-yellow-600"
+                        : "bg-red-600"
+                    }`}
+                  >
+                    {result}
+                  </span>
+                ))}
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    {/* Bottom glow */}
+    <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#d4a048] to-transparent" />
+  </div>
+</section>
 
       {/* SCHEDULE SECTION */}
       <section className="max-w-6xl mx-auto px-4 py-16">
